@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { UserButton, useUser} from "@clerk/nextjs";
+import {LoadingSpinner, LoadingPage} from "src/components/loading"
 
 import { RouterOutputs, api } from "~/utils/api";
 
@@ -49,13 +50,24 @@ const PostsView = (props:  PostWithUser) => {
   )
 
 }
+const Feed = () => {
+  const { data, isLoading } = api.post.getAll.useQuery();
+  if(isLoading) return <LoadingPage />
+  if(!data) return <div>Something went wrong</div>
+
+  return (
+    <div>
+      {[...data, ...data]?.map((fullPost) => (<PostsView {...fullPost} />))}
+    </div>
+)
+
+}
 
 export default function Home() {
 
-  const { data, isLoading } = api.post.getAll.useQuery();
-  if(isLoading) return <div>Loading...</div>
-  if(!data) return <div>Something went wrong</div>
-  const {user} = useUser();
+  const {user, isLoaded: userLoaded} = useUser();
+  api.post.getAll.useQuery();
+  if(!userLoaded) return <div></div>
   return (
     <>
       <Head>
@@ -68,9 +80,8 @@ export default function Home() {
           <div className="border-b border-slate-400 p-4 flex justify-center">
               {<CreatePostWizard />}
           </div>
-          <div>
-            {[...data, ...data]?.map((fullPost) => (<PostsView {...fullPost} />))}
-          </div>
+
+          <Feed />
         </div>
       </main>
     </>
