@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { UserButton, useUser} from "@clerk/nextjs";
-import {LoadingSpinner, LoadingPage} from "src/components/loading"
+import {LoadingSpinner, LoadingPage} from "~/components/loading"
 
 import { RouterOutputs, api } from "~/utils/api";
 
