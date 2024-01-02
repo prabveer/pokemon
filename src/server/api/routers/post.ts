@@ -59,7 +59,7 @@ export const postRouter = createTRPCRouter({
 
   }),
   create: privateProcedure.input(z.object({
-    content: z.string().emoji().min(1).max(280)
+    content: z.string().emoji("only emoji's allowed").min(1).max(280)
   })).mutation(async ({ctx, input}) => {
     
     const authorId = ctx.userId
@@ -67,7 +67,7 @@ export const postRouter = createTRPCRouter({
     const { success } = await ratelimit.limit(authorId);
 
     if (!success) throw new TRPCError({code: "TOO_MANY_REQUESTS"});
-    
+
     const post = await ctx.db.post.create({
       data: {
         authorId,
