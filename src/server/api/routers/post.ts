@@ -13,7 +13,15 @@ const filterUserForClient = (user: User) => {
     name: user.username, 
     profilePicutre: user.imageUrl}
 }
+import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
+import { Redis } from "@upstash/redis"; // see below for cloudflare and fastly adapters
 
+// Create a new ratelimiter, that allows 10 requests per 10 seconds
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(3, "1 m"),
+  analytics: true,
+});
 export const postRouter = createTRPCRouter({
   
   getLatest: publicProcedure.query(({ ctx }) => {
@@ -55,6 +63,11 @@ export const postRouter = createTRPCRouter({
   })).mutation(async ({ctx, input}) => {
     
     const authorId = ctx.userId
+
+    const { success } = await ratelimit.limit(authorId);
+
+    if (!success) throw new TRPCError({code: "TOO_MANY_REQUESTS"});
+    
     const post = await ctx.db.post.create({
       data: {
         authorId,
