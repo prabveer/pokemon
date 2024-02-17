@@ -1,10 +1,5 @@
 import Head from "next/head";
 import { type NextPage } from "next";
-import Link from "next/link";
-import { UserButton, useUser} from "@clerk/nextjs";
-import {LoadingSpinner, LoadingPage} from "~/components/loading"
-import { toast } from "react-hot-toast";
-import { RouterOutputs, api } from "~/utils/api";
 
 
 const SinglePostPage: NextPage = () => {

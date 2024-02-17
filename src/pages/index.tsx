@@ -1,11 +1,9 @@
-import Head from "next/head";
 import Link from "next/link";
 import { SignInButton, UserButton, useUser} from "@clerk/nextjs";
 import {LoadingSpinner, LoadingPage} from "~/components/loading"
 import { toast } from "react-hot-toast";
-import { RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
 import { PageLayout } from "~/components/layout";
-import { type NextPage } from "next";
 import dayjs from "dayjs";
 dayjs.extend(relativeTime);
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -26,7 +24,7 @@ const CreatePostWizard = () => {
     },
     onError: (e) => {
       const errorMessage = e.data?.zodError?.fieldErrors.content;
-      if (errorMessage && errorMessage[0]) {
+      if (errorMessage?.[0]) {
         toast.error(errorMessage[0]);
       } else {
         toast.error("Failed to post! Please try again later.");
@@ -117,7 +115,7 @@ const Feed = () => {
 
 export default function Home() {
 
-  const {user, isLoaded: userLoaded, isSignedIn} = useUser();
+  const {isLoaded: userLoaded, isSignedIn} = useUser();
   api.post.getAll.useQuery();
   if(!userLoaded) return <div></div>
   return (
