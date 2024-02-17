@@ -1,14 +1,14 @@
-import Link from "next/link";
-import { SignInButton, UserButton, useUser} from "@clerk/nextjs";
-import {LoadingSpinner, LoadingPage} from "~/components/loading"
-import { toast } from "react-hot-toast";
-import { type RouterOutputs, api } from "~/utils/api";
-import { PageLayout } from "~/components/layout";
-import dayjs from "dayjs";
-dayjs.extend(relativeTime);
-import relativeTime from "dayjs/plugin/relativeTime"
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { type NextPage } from "next";
+
+import { api } from "~/utils/api";
+
 import Image from "next/image";
+import { LoadingPage, LoadingSpinner } from "~/components/loading";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
+import { PageLayout } from "~/components/layout";
+import { PostView } from "~/components/postview";
 
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -17,14 +17,14 @@ const CreatePostWizard = () => {
 
   const ctx = api.useContext();
 
-  const { mutate, isLoading: isPosting } = api.post.create.useMutation({
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
     onSuccess: () => {
       setInput("");
-      void ctx.post.getAll.invalidate();
+      void ctx.posts.getAll.invalidate();
     },
-    onError: (e) => {
+    onError: (e: any) => {
       const errorMessage = e.data?.zodError?.fieldErrors.content;
-      if (errorMessage?.[0]) {
+      if (errorMessage && errorMessage[0]) {
         toast.error(errorMessage[0]);
       } else {
         toast.error("Failed to post! Please try again later.");
@@ -72,28 +72,9 @@ const CreatePostWizard = () => {
     </div>
   );
 };
-type PostWithUser = RouterOutputs["post"]["getAll"][number];
 
-const PostsView = (props:  PostWithUser) => {
-  const {post, author} = props;
-  return (
-    <div key={post.id} className=" border-b border-slate-400 p-8 flex gap-3">
-      <Image src = {author.profilePicutre} className=" h-14 w-14 rounded-full" 
-        width={56} height={56} alt={`@${author.name}'s profile picture`
-        } />
-      <div className="flex flex-col">
-        <div className="flex text-slate-300 gap-1">
-          <Link href = {`/@${author.name}`}><span>{`@${author.name}`}</span></Link>
-          <Link href = {`/post/${post.id}`}><span className="font-thin">{` · ${dayjs(post.createdAt).fromNow()}`}</span></Link>
-        </div>
-        <span className="text-2xl">{post.content}</span>
-      </div>
-    </div>
-  )
-
-}
 const Feed = () => {
-  const { data, isLoading: postsLoading } = api.post.getAll.useQuery();
+  const { data, isLoading: postsLoading } = api.posts.getAll.useQuery();
 
   if (postsLoading)
     return (
@@ -106,18 +87,22 @@ const Feed = () => {
 
   return (
     <div className="flex grow flex-col overflow-y-scroll">
-      {[...data, ...data, ...data, ...data].map((fullPost) => (
-        <PostsView {...fullPost} key={fullPost.post.id} />
+      {[...data].map((fullPost) => (
+        <PostView {...fullPost} key={fullPost.post.id} />
       ))}
     </div>
   );
-}
+};
 
-export default function Home() {
+const Home: NextPage = () => {
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
 
-  const {isLoaded: userLoaded, isSignedIn} = useUser();
-  api.post.getAll.useQuery();
-  if(!userLoaded) return <div></div>
+  // Start fetching asap
+  api.posts.getAll.useQuery();
+
+  // Return empty div if user isn't loaded
+  if (!userLoaded) return <div />;
+
   return (
     <PageLayout>
       <div className="flex border-b border-slate-400 p-4">
@@ -128,7 +113,10 @@ export default function Home() {
         )}
         {isSignedIn && <CreatePostWizard />}
       </div>
+
       <Feed />
-    </PageLayout>  
+    </PageLayout>
   );
-}
+};
+
+export default Home;

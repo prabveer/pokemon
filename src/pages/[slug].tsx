@@ -8,7 +8,7 @@ import { PostView } from "~/components/postview";
 import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 
 const ProfileFeed = (props: { userId: string }) => {
-  const { data, isLoading } = api.post.getPostsByUserId.useQuery({
+  const { data, isLoading } = api.posts.getPostsByUserId.useQuery({
     userId: props.userId,
   });
 
@@ -18,7 +18,7 @@ const ProfileFeed = (props: { userId: string }) => {
 
   return (
     <div className="flex flex-col">
-      {data.map((fullPost) => (
+      {data.map((fullPost: any) => (
         <PostView {...fullPost} key={fullPost.post.id} />
       ))}
     </div>
@@ -26,7 +26,7 @@ const ProfileFeed = (props: { userId: string }) => {
 };
 
 const ProfilePage: NextPage<{ username: string }> = ({ username }) => {
-  const { data } = api.profile.getUserbyUsername.useQuery({
+  const { data } = api.profile.getUserByUsername.useQuery({
     username,
   });
   if (!data) return <div>404</div>;
@@ -67,7 +67,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
 
   const username = slug.replace("@", "");
 
-  await ssg.profile.getUserbyUsername.prefetch({ username });
+  await ssg.profile.getUserByUsername.prefetch({ username });
 
   return {
     props: {
